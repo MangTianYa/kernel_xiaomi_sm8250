@@ -229,7 +229,7 @@ static inline bool cap_ambient_invariant_ok(const struct cred *cred)
  * Get a reference on the specified set of new credentials.  The caller must
  * release the reference.
  */
-static inline struct cred *get_new_cred(struct cred *cred)
+static inline const struct cred *get_cred(const struct cred *cred)
 {
 	atomic_inc(&cred->usage);
 	return cred;
@@ -248,6 +248,16 @@ static inline struct cred *get_new_cred(struct cred *cred)
  * accidental alteration of a set of credentials that should be considered
  * immutable.
  */
+static inline const struct cred *get_cred_rcu(const struct cred *cred)
+{
+	struct cred *nonconst_cred = (struct cred *) cred;
+	if (!cred)
+		return NULL;
+	nonconst_cred->non_rcu = 0;
+	return get_new_cred(nonconst_cred);
+	validate_creds(cred);
+}
+
 static inline const struct cred *get_cred_rcu(const struct cred *cred)
 {
 	struct cred *nonconst_cred = (struct cred *) cred;
